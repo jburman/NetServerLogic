@@ -35,6 +35,35 @@ public sealed class DataverseOptions
 {
     public string? ConnectionString { get; set; }
 
+    /// <summary>
+    /// Dataverse environment URL (e.g., <c>https://contoso.crm.dynamics.com</c>).
+    /// Required when using <see cref="Certificate"/> authentication.
+    /// </summary>
+    public string? Url { get; set; }
+
+    /// <summary>
+    /// Microsoft Entra ID application (client) ID.
+    /// Required when using <see cref="Certificate"/> authentication.
+    /// </summary>
+    public string? ClientId { get; set; }
+
+    /// <summary>
+    /// Optional redirect URI passed to <c>ServiceClient</c> for certificate authentication.
+    /// Defaults to <c>http://localhost</c>.
+    /// </summary>
+    public string? RedirectUri { get; set; }
+
+    /// <summary>
+    /// Forces creation of a unique <c>ServiceClient</c> connection instance instead of reusing
+    /// a cached SDK connection. Defaults to <see langword="true"/>.
+    /// </summary>
+    public bool UseUniqueInstance { get; set; } = true;
+
+    /// <summary>
+    /// Certificate-based authentication configuration for live Dataverse mode.
+    /// </summary>
+    public DataverseCertificateOptions? Certificate { get; set; }
+
     public CreateRecordReturnMode CreateRecordReturnMode { get; set; } = CreateRecordReturnMode.IdObject;
 
     public Dictionary<string, string> PrimaryKeyOverrides { get; set; } = new(StringComparer.OrdinalIgnoreCase);

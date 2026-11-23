@@ -259,7 +259,7 @@ Bridges directly to Dataverse's Web API (`api/data/v9.2/`) through `Microsoft.Po
 
 * **Why `ExecuteWebRequest` instead of `IOrganizationService`:** `Server.Connector.Dataverse` speaks plural OData entity sets, OData query options (`$select`, `$expand`, `$filter`), and raw JSON payloads. `ExecuteWebRequest` reuses `ServiceClient`'s authenticated token cache, retry policies, and connection pooling while delivering 100% Web API wire parity without translating OData to `QueryExpression`.
 * **Headers:** Attach `OData-Version: 4.0`, `OData-MaxVersion: 4.0`, and `Prefer: odata.include-annotations="*"` (and optionally `Prefer: return=representation` on `POST`/`PATCH` depending on `CreateRecordReturnMode`).
-* **Authentication:** Accept either an injected `ServiceClient` from DI or a connection string configured via User Secrets / environment variables (`PowerPagesServerLogic:Dataverse:ConnectionString`). Never store secrets in `appsettings.json`.
+* **Authentication:** Accept an injected `ServiceClient` from DI, a connection string configured via User Secrets / environment variables (`PowerPagesServerLogic:Dataverse:ConnectionString`), or structured certificate-based authentication (`PowerPagesServerLogic:Dataverse:Url`, `ClientId`, and `Certificate` supporting X.509 store thumbprint, `.pfx`/`.p12`/`.pem` files, base64-encoded payloads, or a programmatic `X509Certificate2` instance). Never store secrets or private key material in `appsettings.json`.
 * **Error Handling:** When `response.IsSuccessStatusCode` is `false`, throw an exception including HTTP status code and Dataverse error body so the JS `try/catch` block receives a realistic error message.
 
 ### 7.2 `MockDataverseProvider`

@@ -62,7 +62,14 @@ app.Run();
       "*.contoso.com"
     ],
     "Dataverse": {
-      "ConnectionString": ""
+      "ConnectionString": "",
+      "Url": "",
+      "ClientId": "",
+      "Certificate": {
+        "Thumbprint": "",
+        "StoreName": "My",
+        "StoreLocation": "CurrentUser"
+      }
     },
     "SiteSettings": {
       "Custom/FeatureFlag": "true"
@@ -89,7 +96,19 @@ app.Run();
 }
 ```
 
-> **Security note:** For `DataverseMode: "Live"`, store `PowerPagesServerLogic:Dataverse:ConnectionString` in User Secrets or environment variables—never commit credentials in `appsettings.json`.
+> **Security note:** For `DataverseMode: "Live"`, store credentials (`PowerPagesServerLogic:Dataverse:ConnectionString`, `Certificate:Password`, or `Certificate:Base64`) in User Secrets or environment variables—never commit secrets or private key files in `appsettings.json`.
+
+#### Live Dataverse Authentication Options
+
+When `DataverseMode` is set to `"Live"`, `LiveDataverseSdkProvider` supports:
+
+1. **Injected `ServiceClient` from DI** (if registered in your ASP.NET Core container).
+2. **Connection string** (`PowerPagesServerLogic:Dataverse:ConnectionString`), including `AuthType=ClientSecret`, `AuthType=OAuth`, or `AuthType=Certificate`.
+3. **Structured certificate-based authentication** (`PowerPagesServerLogic:Dataverse:Url`, `ClientId`, and `Certificate`) using any one of:
+   - **OS Certificate Store:** `Certificate:Thumbprint` with optional `StoreName` (default `My`), `StoreLocation` (default `CurrentUser`), and `ValidOnly` (default `false`).
+   - **Certificate File (`.pfx`/`.p12` or `.pem`):** `Certificate:Path` (relative to content root or absolute), optional `KeyPath` (separate PEM private key), optional `Password`, and optional `KeyStorageFlags`.
+   - **Base64 Payload:** `Certificate:Base64` (base64-encoded PKCS#12 or combined PEM) with optional `Password` and `KeyStorageFlags`.
+   - **Programmatic `X509Certificate2`:** `emulator.UseDataverseCertificate(url, clientId, cert)` (or `options.Dataverse.Certificate = new DataverseCertificateOptions { Instance = cert }`).
 
 ### 3. Add a Server Logic Script & Mock Data
 

@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -54,6 +55,56 @@ public sealed class ServerLogicEmulatorBuilder
     {
         ArgumentNullException.ThrowIfNull(handler);
         return AddCustomApiMock(methodAndUrl, (payload, _) => handler(payload));
+    }
+
+    /// <summary>
+    /// Configures live Dataverse certificate-based authentication using an existing <see cref="X509Certificate2"/> instance.
+    /// The caller retains ownership and disposal responsibility for <paramref name="certificate"/>.
+    /// </summary>
+    public ServerLogicEmulatorBuilder UseDataverseCertificate(
+        string url,
+        string clientId,
+        X509Certificate2 certificate,
+        string? redirectUri = null,
+        bool useUniqueInstance = true)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(url);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientId);
+        ArgumentNullException.ThrowIfNull(certificate);
+
+        return UseDataverseCertificate(
+            url,
+            clientId,
+            cert => cert.Instance = certificate,
+            redirectUri,
+            useUniqueInstance);
+    }
+
+    /// <summary>
+    /// Configures live Dataverse certificate-based authentication using a configuration callback.
+    /// </summary>
+    public ServerLogicEmulatorBuilder UseDataverseCertificate(
+        string url,
+        string clientId,
+        Action<DataverseCertificateOptions> configureCertificate,
+        string? redirectUri = null,
+        bool useUniqueInstance = true)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(url);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientId);
+        ArgumentNullException.ThrowIfNull(configureCertificate);
+
+        _services.Configure<ServerLogicEmulatorOptions>(opts =>
+        {
+            opts.Dataverse.Url = url.Trim();
+            opts.Dataverse.ClientId = clientId.Trim();
+            opts.Dataverse.RedirectUri = redirectUri;
+            opts.Dataverse.UseUniqueInstance = useUniqueInstance;
+            opts.Dataverse.Certificate ??= new DataverseCertificateOptions();
+            configureCertificate(opts.Dataverse.Certificate);
+        });
+
+        return this;
     }
 }
 
