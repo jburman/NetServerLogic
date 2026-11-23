@@ -13,8 +13,7 @@ if (app.Environment.IsDevelopment())
     app.MapPowerPagesServerLogic();
 }
 
-app.UseBlazorFrameworkFiles();
-app.UseStaticFiles();
+app.MapStaticAssets();
 app.MapFallbackToFile("index.html");
 
 app.Run();

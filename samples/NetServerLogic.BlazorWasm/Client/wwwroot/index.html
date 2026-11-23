@@ -6,9 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NetServerLogic — Blazor WASM Sample</title>
     <base href="/" />
+    <link rel="preload" id="webassembly" />
     <link href="_content/Microsoft.FluentUI.AspNetCore.Components/css/reboot.css" rel="stylesheet" />
-    <link href="css/app.css" rel="stylesheet" />
+    <link href="css/app#[.{fingerprint}].css" rel="stylesheet" />
     <link href="NetServerLogic.BlazorWasm.Client.styles.css" rel="stylesheet" />
+    <script type="importmap"></script>
 </head>
 
 <body>
@@ -24,7 +26,7 @@
         <span class="dismiss">X</span>
     </div>
 
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 </body>
 
 </html>
