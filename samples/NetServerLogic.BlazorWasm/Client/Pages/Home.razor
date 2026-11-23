@@ -1,0 +1,193 @@
+@page "/"
+@inject ContactsServerLogicClient ContactsClient
+
+<PageTitle>Contacts — NetServerLogic Sample</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.SpaceBetween" VerticalAlignment="VerticalAlignment.Center" Style="width: 100%;">
+        <FluentLabel Typo="Typography.PageTitle">Contacts</FluentLabel>
+        <FluentButton Appearance="Appearance.Neutral"
+                      IconStart="@(new Icons.Regular.Size20.ArrowClockwise())"
+                      Disabled="@(_loading || _saving)"
+                      OnClick="LoadContactsAsync">
+            Refresh
+        </FluentButton>
+    </FluentStack>
+
+    <FluentMessageBar Intent="MessageIntent.Info" AllowDismiss="false">
+        Calls <code>/_api/serverlogics/contacts</code> via NetServerLogic. Locally this runs as the configured Dataverse App User
+        (showing all contacts visible to that App User); when deployed to Power Pages, table permissions scope results to the signed-in user.
+    </FluentMessageBar>
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <FluentMessageBar Intent="MessageIntent.Error" Title="Request failed" OnDismiss="@(() => _errorMessage = null)">
+            @_errorMessage
+        </FluentMessageBar>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(_successMessage))
+    {
+        <FluentMessageBar Intent="MessageIntent.Success" OnDismiss="@(() => _successMessage = null)">
+            @_successMessage
+        </FluentMessageBar>
+    }
+
+    @if (_editingContact is not null)
+    {
+        <FluentCard Style="padding: 20px;">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
+                <FluentLabel Typo="Typography.H4">Edit Contact</FluentLabel>
+
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12" Wrap="true" Style="width: 100%;">
+                    <FluentTextField @bind-Value="_editModel.FirstName"
+                                     Label="First Name"
+                                     Style="flex: 1; min-width: 200px;" />
+                    <FluentTextField @bind-Value="_editModel.LastName"
+                                     Label="Last Name"
+                                     Style="flex: 1; min-width: 200px;" />
+                </FluentStack>
+
+                <FluentTextField @bind-Value="_editModel.EmailAddress1"
+                                 Label="Email"
+                                 TextFieldType="TextFieldType.Email"
+                                 Style="width: 100%;" />
+
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8">
+                    <FluentButton Appearance="Appearance.Accent"
+                                  IconStart="@(new Icons.Regular.Size20.Save())"
+                                  Loading="@_saving"
+                                  Disabled="@_saving"
+                                  OnClick="SaveEditAsync">
+                        Save
+                    </FluentButton>
+                    <FluentButton Appearance="Appearance.Neutral"
+                                  Disabled="@_saving"
+                                  OnClick="CancelEdit">
+                        Cancel
+                    </FluentButton>
+                </FluentStack>
+            </FluentStack>
+        </FluentCard>
+    }
+
+    @if (_loading)
+    {
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+            <FluentProgressRing />
+            <FluentLabel>Loading contacts from /_api/serverlogics/contacts...</FluentLabel>
+        </FluentStack>
+    }
+    else if (_contacts.Count == 0 && string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <FluentLabel>No contacts returned.</FluentLabel>
+    }
+    else if (_contacts.Count > 0)
+    {
+        <FluentDataGrid Items="@_contacts.AsQueryable()" TGridItem="ContactRecord" Style="width: 100%;">
+            <PropertyColumn Title="Name" Property="@(c => c.DisplayName)" Sortable="true" />
+            <PropertyColumn Title="Email" Property="@(c => c.EmailAddress1)" Sortable="true" />
+            <TemplateColumn Title="Actions" Align="Align.End">
+                <FluentButton Appearance="Appearance.Stealth"
+                              IconStart="@(new Icons.Regular.Size20.Edit())"
+                              Disabled="@_saving"
+                              OnClick="@(() => BeginEdit(context))">
+                    Edit
+                </FluentButton>
+            </TemplateColumn>
+        </FluentDataGrid>
+    }
+</FluentStack>
+
+@code {
+    private readonly List<ContactRecord> _contacts = [];
+    private ContactRecord? _editingContact;
+    private UpdateContactRequest _editModel = new();
+    private bool _loading;
+    private bool _saving;
+    private string? _errorMessage;
+    private string? _successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadContactsAsync();
+    }
+
+    private async Task LoadContactsAsync()
+    {
+        _loading = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        try
+        {
+            var results = await ContactsClient.GetContactsAsync();
+            _contacts.Clear();
+            _contacts.AddRange(results);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void BeginEdit(ContactRecord contact)
+    {
+        _errorMessage = null;
+        _successMessage = null;
+        _editingContact = contact;
+        _editModel = new UpdateContactRequest
+        {
+            ContactId = contact.ContactId,
+            FirstName = contact.FirstName,
+            LastName = contact.LastName,
+            EmailAddress1 = contact.EmailAddress1
+        };
+    }
+
+    private void CancelEdit()
+    {
+        _editingContact = null;
+        _editModel = new UpdateContactRequest();
+    }
+
+    private async Task SaveEditAsync()
+    {
+        if (_editingContact is null)
+        {
+            return;
+        }
+
+        _saving = true;
+        _errorMessage = null;
+        _successMessage = null;
+
+        try
+        {
+            var updated = await ContactsClient.UpdateContactAsync(_editModel);
+            var index = _contacts.FindIndex(c =>
+                string.Equals(c.ContactId, updated.ContactId, StringComparison.OrdinalIgnoreCase));
+
+            if (index >= 0)
+            {
+                _contacts[index] = updated;
+            }
+
+            _successMessage = $"Updated contact '{updated.DisplayName}'.";
+            _editingContact = null;
+            _editModel = new UpdateContactRequest();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

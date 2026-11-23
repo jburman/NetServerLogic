@@ -4,6 +4,10 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Folder Name="/samples/">
+    <Project Path="samples/NetServerLogic.BlazorWasm/Client/NetServerLogic.BlazorWasm.Client.csproj" />
+    <Project Path="samples/NetServerLogic.BlazorWasm/Server/NetServerLogic.BlazorWasm.Server.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/NetServerLogic/NetServerLogic.csproj" />
   </Folder>
