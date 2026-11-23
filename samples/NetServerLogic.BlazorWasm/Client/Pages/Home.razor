@@ -84,10 +84,13 @@
     }
     else if (_contacts.Count > 0)
     {
-        <FluentDataGrid Items="@_contacts.AsQueryable()" TGridItem="ContactRecord" Style="width: 100%;">
+        <FluentDataGrid Items="@_contacts.AsQueryable()"
+                        TGridItem="ContactRecord"
+                        RowSize="DataGridRowSize.Medium"
+                        Style="width: 100%;">
             <PropertyColumn Title="Name" Property="@(c => c.DisplayName)" Sortable="true" />
             <PropertyColumn Title="Email" Property="@(c => c.EmailAddress1)" Sortable="true" />
-            <TemplateColumn Title="Actions" Align="Align.End">
+            <TemplateColumn Title="Actions" Align="Align.End" Width="140px" Class="actions-cell">
                 <FluentButton Appearance="Appearance.Stealth"
                               IconStart="@(new Icons.Regular.Size20.Edit())"
                               Disabled="@_saving"
